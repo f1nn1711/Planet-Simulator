@@ -1,3 +1,4 @@
+#All the imports
 import pygame
 import math
 import sys
@@ -5,66 +6,70 @@ from random import randint
 from time import sleep
 import traceback
 
+#This is the class for a planet
 class Planet():
 	def __init__(self, x=0, y=0, name="Some Planet", radius=0, angle=0, orbital_dis=0, colour=(0,255,0),system=None,mass=0, center=None):
 		self.x = x
 		self.y = y
-		self.name = name
-		self.radius = radius#radius of the planet
-		self.angle = angle#angle from up to center to planet
-		self.orbital_dis = round(orbital_dis)#distance from center
-		self.colour = colour#pretty self explanatory RGB
-		self.system = system#the system the planet is part of
-		self.center = center#the center for the planets orbit
-		self.mass = mass#the mass of the plaet
+		self.name = name#The name to be displayed next to the planet
+		self.radius = radius#Radius of the planet
+		self.angle = angle#Angle from up to center to planet
+		self.orbital_dis = round(orbital_dis)#Distance from center
+		self.colour = colour#RGB colour code for the planet
+		self.system = system#The solar system the planet is part of
+		self.center = center#Another planet which this plant will orbit around
+		self.mass = mass#The mass of this planet
 
-		if self.orbital_dis > 0:#checks to see if the orbital distance is greater than 0
-			'''
-			This is the code which calculates the velocity the planet will need to travel
-			in order to stay in orbit around the center planet
-			'''
-			self.vel = math.sqrt(((6.673*(10**1))*center.mass)/self.orbital_dis)#6.673
+		if self.orbital_dis > 0:#Checks to see if the orbital distance is greater than 0, if this was 0 then it will be the central planet for the solar system
+			#This calculates the velocity that planet will need to orbit at for it to be able to remain in a constant orbit
+			self.vel = math.sqrt(((6.673*(10**1))*center.mass)/self.orbital_dis)
 
-		self.system.planets.append(self)#adds the planet to the system
-
+		self.system.planets.append(self)#Adds this planet to the solar system
+	
+	#This updates the position of the planet
 	def update_pos(self):
-		circumference_change_ratio = (self.vel*self.system.time_scale)/(math.pi*(self.orbital_dis*2))#calculates the ratio of the distance traveled compared to the whole circumference
-		self.angle += 360*circumference_change_ratio#calculates the angle around its orbut
+		circumference_change_ratio = (self.vel*self.system.time_scale)/(math.pi*(self.orbital_dis*2))#Calculates the ratio of the distance traveled around the orbit compared to the whole circumference
+		
+		self.angle += 360*circumference_change_ratio#Calculates the planets angle around the orbit
 
-		x_change = math.cos(math.radians(self.angle))*self.orbital_dis
-		y_change = math.sin(math.radians(self.angle))*self.orbital_dis
+		new_x = math.cos(math.radians(self.angle))*self.orbital_dis#Calculates the new x coordinate for the planet 
+		new_y = math.sin(math.radians(self.angle))*self.orbital_dis#Calculates the new y coordinate for the planet 
 
-		self.x = x_change+self.center.x+self.center.radius
-		self.y = y_change+self.center.y+self.center.radius
+		self.x = new_x+self.center.x+self.center.radius#Sets the planets x coordinate to the new x coordinate
+		self.y = new_y+self.center.y+self.center.radius#Sets the planets y coordinate to the new y coordinate
 
+#Class for an on-screen button
 class Button():
 	def __init__(self, screen, x, y, width, height, text, text_colour=(255,255,0), box_colour=(255,0,0), function=None, item_type="button", id=None):
-		self.screen = screen#pygame screen object
+		self.screen = screen#Pygame screen object
 		self.x = x
 		self.y = y
 		self.width = width
 		self.height = height
-		self.text = text
+		self.text = text#Text on the inside of the button
 		self.text_colour = text_colour
 		self.box_colour = box_colour
-		self.function = function
+		self.function = function#A callable object that will be called when the button is clicked
 		self.item_type = item_type
 		self.id = id
-
+	
+	#Draws the button on the screen
 	def render(self):
-		pygame.draw.rect(self.screen, self.box_colour, (self.x, self.y, self.width, self.height))
+		pygame.draw.rect(self.screen, self.box_colour, (self.x, self.y, self.width, self.height))#Draws a rectangle
 
-		font = pygame.font.SysFont("Ariel", 20)
-		text = font.render(self.text, True, self.text_colour)
-		text_rect = text.get_rect(center=(self.x+(self.width//2), self.y+(self.height//2)))
-		screen.blit(text, text_rect)
-
+		font = pygame.font.SysFont("Ariel", 20)#Sets the font family and size
+		text = font.render(self.text, True, self.text_colour)#Creates the text object
+		text_rect = text.get_rect(center=(self.x+(self.width//2), self.y+(self.height//2)))#Creates a box for the next to go in
+		screen.blit(text, text_rect)#Draws the text within the text box
+	
+	#Method that is called when the button is clicked
 	def active(self):
 		self.function()
 
+#Class for an on-screen label
 class Label():
 	def __init__(self, screen, x, y, text, font="Ariel", font_size=20, colour=(255,255,255), item_type="label"):
-		self.screen = screen
+		self.screen = screen#Pygame screen object
 		self.x = x
 		self.y = y
 		self.text = text
@@ -73,47 +78,49 @@ class Label():
 		self.colour = colour
 		self.item_type = item_type
 
+	#Draws the label on the scree
 	def render(self):
-		font = pygame.font.SysFont(self.font, self.font_size)
-		screen.blit(font.render(self.text, True, self.colour),(self.x,self.y))
+		font = pygame.font.SysFont(self.font, self.font_size)#Sets the font family and size
+		text = font.render(self.text, True, self.colour)#Creates the text object
+		screen.blit(text, (self.x,self.y))#Draws the text at the give (x,y) coordinates
 
 class System():
 	def __init__(self, target_fps, screen_width, screen_height, divider, stars, planets=[], zoom_level=1):
 		self.target_fps = target_fps
 		self.screen_width = screen_width
 		self.screen_height = screen_height
-		self.divider = divider
+		self.divider = divider#The width of the sidebar on the right
 		self.zoom_level = zoom_level
-		self.stars = stars
+		self.stars = stars#This is a list which contains the data for the start generation, it is in the structure for [start width, start height, proportion of screen with stars on]
 		self.time_scale = 1
 
-		self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
-		self.clock = pygame.time.Clock()
+		self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))#Pygame screen object with a given width and height
+		self.clock = pygame.time.Clock()#A pygame clock object which will control the frame rate of the simulation
 
-		self.planets = planets
-		self.selected_planet = None
-		self.place_mode = False
-		self.new_planet_size = 10
+		self.planets = planets#A list which contains all of the planets in the system
+		self.selected_planet = None#What planet has been clicked on
+		self.place_mode = False#Does the user want to add another planet
+		self.new_planet_size = 10#Inital size for a new planet
 
-		self.menu_status = 0
+		self.new_name = ""#Variable to store the name of a planet which is being changed
+		self.edit_mode = False#Is the user currently changing a planets name
 
-		self.new_name = ""
-		self.edit_mode = False
+		self.running = True#Is mainloop running
+		self.paused = False#Is the simulation paused
 
-		self.running = True
-		self.paused = False
+		self.genrate_stars()#Calls the function to generate all the stars
 
-		self.genrate_stars()
-
+	#This function creates a 2D list containing the [x,y] coordinates of each start
 	def genrate_stars(self):
-		area_to_be_covered = (self.screen_width*self.screen_height)*self.stars[2]
-		number_stars = round(area_to_be_covered/(self.stars[0]*self.stars[1]))
+		area_to_be_covered = (self.screen_width*self.screen_height)*self.stars[2]#Calculates how much of the screen needs to be covered in stars (in pixels)
+		number_stars = round(area_to_be_covered/(self.stars[0]*self.stars[1]))#The number of stars required
 
-		self.star_coords = []
+		self.star_coords = []#New blank list for the stars to be stored in
 
-		for n in range(number_stars):
-			self.star_coords.append([randint(0,self.screen_width),randint(0,self.screen_height)])
+		for n in range(number_stars):#Ittrates for the number of stars needed
+			self.star_coords.append([randint(0,self.screen_width),randint(0,self.screen_height)])#Generates a random x and y coordinate and adds it to the list of starts
 
+	#Calculates how the x and y coordinates have changed bassed on how zoomed in/out the user is
 	def zoom_shift(self, x, y, w, h):
 		cx = x + (w/2)
 		cy = y + (h/2)
@@ -393,7 +400,6 @@ class System():
 				self.items.append(Label(self.screen, 1020, 290, f"delete current text. Once you have", font_size=24))
 				self.items.append(Label(self.screen, 1020, 310, f"finished typing click 'Save (Esc)'.", font_size=24))
 
-			self.menu_status = 1
 		elif self.place_mode:
 			self.items.append(Button(self.screen, 1020,20,125,25,"Cancel",box_colour=(255,0,0),text_colour=(0,0,0),function=self.add_planet))
 			self.items.append(Label(self.screen, 1020, 60, f"Press ENTER to confirm planets location", font_size=20))
