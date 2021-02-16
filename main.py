@@ -122,146 +122,165 @@ class System():
 
 	#Calculates how the x and y coordinates have changed bassed on how zoomed in/out the user is
 	def zoom_shift(self, x, y, w, h):
-		cx = x + (w/2)
+		cx = x + (w/2)#Since the given (x,y) coordinates are for the top left corner this finds the coordinates for the center of the shape
 		cy = y + (h/2)
 
-		dx = cx - self.planets[0].x
+		dx = cx - self.planets[0].x#Calculates the difference between the center of the shape and the center of the central planet(which is the the center of zoom)
 		dy = cy - self.planets[0].y
 
-		new_dx = dx * self.zoom_level
+		new_dx = dx * self.zoom_level#Calculates the new difference between the center of the shape and central planet by multiplying the original distance by the zoom level
 		new_dy = dy * self.zoom_level
 
-		fx = self.planets[0].x+new_dx+(w/2)
+		fx = self.planets[0].x+new_dx+(w/2)#Calculates the new top left hand corner coordinate for to now zoomed in shape
 		fy = self.planets[0].y+new_dy+(h/2)
 
-		return fx, fy
-
+		return fx, fy#Returns the new coordinates
+	
+	#Function to remove a planet from the system
 	def remove_planet(self):
-		for planet in self.planets:
-			if planet.center == self.selected_planet:
+		for planet in self.planets:#Itterates through all the planets currently in the system
+			if planet.center == self.selected_planet:#If the planets center planet (in which it orbits around) is the same as the selected planet
 				print("Other planets are orbitting this planet so it can't be deleted.")
-				return
-
-		self.planets.remove(self.selected_planet)
-		self.selected_planet = None
-
+				return#Returns from the function without deleting any planet
+		
+		self.planets.remove(self.selected_planet)#Removes the selected planet from the list of planets in the system
+		self.selected_planet = None#Makes no planet selected
+		
+	#Function to toggle if the user is adding a planet
 	def add_planet(self):
-		if not self.prev_keys[pygame.K_d]:
-			if not self.place_mode:
-				self.place_mode = True
-			else:
-				self.place_mode = False
+		if self.place_mode:#If the user is currently adding a planet
+			self.place_mode = False#Cancel adding a planet
+		else:#If they aren't adding a planet
+			self.place_mode = True#Set the user wanting to add a planet to true
 
+	#Function that toggles whether the simulation is paused
 	def toggle_pause(self):
 		if not self.paused:
 			self.paused = True
 		else:
 			self.paused = False
 
+	#Function that cancels any planet being selected
 	def cancel_selected_planet(self):
 		self.selected_planet = None
 
+	#Function that increases the time multiplier
 	def speed_up_time(self):
 		self.time_scale += 0.25
 
+	#Function that resets the time multiplier to the default of 1
 	def reset_time(self):
 		self.time_scale = 1
 
+	#Function that decreases the time multiplier
 	def slow_down_time(self):
 		if self.time_scale > 0:
 			self.time_scale -= 0.25
 
+	#Function that enteres the user in to the mode where they can edit a planets name
 	def set_to_edit_name(self):
-		self.edit_mode = True
-		self.new_name = self.selected_planet.name
+		self.edit_mode = True#Sets the name editting mode to true
+		self.new_name = self.selected_planet.name#Sets the new name of the planet to the current name of the planet
 
+	#Function that cancels the edit of a planets name
 	def cancel_edit_name(self):
-		self.new_name = ""
-		self.edit_mode = False
-
+		self.new_name = ""#Resets the new name of a planet
+		self.edit_mode = False#Exits the name editing mode
+	
+	#Function that resets the zoom level to the default of 1
 	def reset_zoom(self):
 		self.zoom_level = 1
 
+	#Function that increases the red RBG value of a planet
 	def add_red(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[0]+5 <= 255:
-			l_colours[0] += 5
+		if self.selected_planet.colour[0]+5 <= 255:#If the current red RGB value plus 5 is less than 255
+			l_colours[0] += 5#Add 5 to the red value
 		else:
-			l_colours[0] = 255
+			l_colours[0] = 255#Set the red value to 255
 
-		self.selected_planet.colour = tuple(l_colours)
-
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
+		
+	#Function that decreases the red RBG value of a planet
 	def rem_red(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[0]-5 >= 0:
-			l_colours[0] -= 5
+		if self.selected_planet.colour[0]-5 >= 0:#If the current red RGB value subtract 5 is greater than 0
+			l_colours[0] -= 5#Subtracts 5 from the red value
 		else:
-			l_colours[0] = 0
+			l_colours[0] = 0#Set the red value to 0
 
-		self.selected_planet.colour = tuple(l_colours)
-
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
+		
+	#Function that increases the green RBG value of a planet
 	def add_green(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[1]+5 <= 255:
-			l_colours[1] += 5
+		if self.selected_planet.colour[1]+5 <= 255:#If the current green RGB value plus 5 is less than 255
+			l_colours[1] += 5#Add 5 to the green value
 		else:
-			l_colours[1] = 255
+			l_colours[1] = 255#Sets the green value to 255
 
-		self.selected_planet.colour = tuple(l_colours)
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
 
+	#Function that decreases the green RBG value of a planet
 	def rem_green(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[1]-5 >= 0:
-			l_colours[1] -= 5
+		if self.selected_planet.colour[1]-5 >= 0:#If the current green RGB value subtract 5 is greater than 0
+			l_colours[1] -= 5#Subtracts 5 from the green value
 		else:
-			l_colours[1] = 0
+			l_colours[1] = 0#Sets the green value to 0
 
-		self.selected_planet.colour = tuple(l_colours)
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
 
+	#Function that increases the blue RBG value of a planet
 	def add_blue(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[2]+5 <= 255:
-			l_colours[2] += 5
+		if self.selected_planet.colour[2]+5 <= 255:#If the current blue RGB value plus 5 is less than 255
+			l_colours[2] += 5#Add 5 to the blue value
 		else:
-			l_colours[2] = 255
+			l_colours[2] = 255#Sets the blue value to 255
 
-		self.selected_planet.colour = tuple(l_colours)
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
 
+	#Function that decreases the blue RBG value of a planet
 	def rem_blue(self):
-		l_colours = list(self.selected_planet.colour)
+		l_colours = list(self.selected_planet.colour)#Converts the RGB tuple in to a list
 
-		if self.selected_planet.colour[2]-5 >= 0:
-			l_colours[2] -= 5
+		if self.selected_planet.colour[2]-5 >= 0:#If the current blue RGB value subtract 5 is greater than 0
+			l_colours[2] -= 5#Subtracts 5 from the blue value
 		else:
-			l_colours[2] = 0
+			l_colours[2] = 0#Sets the blue value to 0
 
-		self.selected_planet.colour = tuple(l_colours)
+		self.selected_planet.colour = tuple(l_colours)#Convert the list of colour values back in to a tuple and set the planets colour to it
 
 	def run(self):
-		#controls the frame rate of the game
+		#Sets the target frame rate of the simulation
 		self.clock.tick(self.target_fps)
 
-		#loops through all the events that have happend in the frame
+		#Itterates through all the events that have happend in the frame
 		for event in pygame.event.get():
+			#Quit the program if the user clicks the 'X'
 			if event.type == pygame.QUIT:
 				sys.exit()
 
-			#detects if a mouse button was pressed
+			#If a mouse button was pressed
 			if event.type == pygame.MOUSEBUTTONDOWN:
-				#edits the zoom level WIP
+				#If the user scrolls up
 				if event.button == 5:
+					#If the current zoom level plus 0.1 is less than or equal to 10
 					if self.zoom_level+0.1 <= 10:
-						self.zoom_level += 0.1
+						self.zoom_level += 0.1#Adds 0.1 to the zoom level
+				#If the user scrolls down
 				elif event.button == 4:
+					#If the current zoom level subracts 0.1 is greater than or equal to 0
 					if self.zoom_level-0.1 >= 0:
-						self.zoom_level -= 0.1
+						self.zoom_level -= 0.1#Subtracts 0.1 from the zoom level
 
-				#if LMB then it checks to see if user clicked on planet
+				#If the LMB then it checks to see if user clicked on planet
 				elif event.button == 1:
 					mouse_x, mouse_y = pygame.mouse.get_pos()
 
