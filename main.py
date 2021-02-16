@@ -280,175 +280,244 @@ class System():
 					if self.zoom_level-0.1 >= 0:
 						self.zoom_level -= 0.1#Subtracts 0.1 from the zoom level
 
-				#If the LMB then it checks to see if user clicked on planet
+				#If the LMB is clicked
 				elif event.button == 1:
+					#Get the x and y coordinates of the mouse
 					mouse_x, mouse_y = pygame.mouse.get_pos()
-
+					
+					#Has the user clicked on a button, by default this is set to false
 					selected_button = False
-
+					
+					#Itterates through all of the items such as buttons that are on the scree
 					for item in self.items:
+						#If that item is a button
 						if item.item_type == "button":
+							#If the mouse x and y is within the bounding box of the button
 							if mouse_x >= item.x and mouse_x <= item.x+item.width and mouse_y >= item.y and mouse_y <= item.y+item.height:
+								#Then selected button is true because they have clicked on a button
 								selected_button = True
+								#Call the function associated with that button
 								item.function()
-
+								
+					#If the user hasn't clicked a button
 					if not selected_button:
+						#Itterates through all of the planets
 						for p in self.planets:
+							#If the distance between the mouse coordinates is less than the radius of the planet
 							if math.sqrt((abs(mouse_x-(p.x+p.radius))**2)+(abs(mouse_y-(p.y+p.radius))**2)) <= p.radius*self.zoom_level:
+								#Sets the selected planet to the planet the user has clicked on
 								self.selected_planet = p
+								#Breaks out the loop meaning no more planets will be checked
 								break
-
+							
+							#If no planet is clicked on then the selected planet is set to false
 							self.selected_planet = None
-							self.new_name = ""
-							self.edit_mode = False
+							#It will cancel the edit of any planets name
+							cancel_edit_name()
 
-			#detects any key pressed down and the user is editing a name
+			#If a key is pressed and the user is in name edit mode
 			if event.type == pygame.KEYDOWN and self.edit_mode:
+				#Try to get the ascii code for the entered key
 				try:
 					entered_ascii_code = ord(event.unicode)
 				except:
+					#If the ascii code doesnt exist for the pressed key then it set to -1
 					entered_ascii_code = -1
-
-				if event.unicode.lower() in accepted_chars:
+				
+				#If the entered letter is in the alphabet
+				if isalpha(event.unicode):
+					#Add that letter to the new name
 					self.new_name += event.unicode
-					self.selected_planet.name = self.new_name
+				#If the ascii code is equal to 32 then the spacebar has been pressed
 				elif entered_ascii_code == 32:
+					#Add a space to the new name
 					self.new_name = self.new_name + " "
+				#If the user pressed the backspace key
 				elif event.key == pygame.K_BACKSPACE:
+					#Slice the new name to exclude the last character of the new name
 					self.new_name = self.new_name[:-1]
-					self.selected_planet.name = self.new_name
+					
+				#Set the planets name to the new name
+				self.selected_planet.name = self.new_name
 
-		#gets all the keys which are currently being pressed
+		#Gets all the keys which pressed
 		keys = pygame.key.get_pressed()
-
+		
+		#If the user is in name edit mode and they havent pressed escape
 		if self.edit_mode and not keys[pygame.K_ESCAPE]:
+			#Cancel all the keys which are pressed as to not interfer with the new name
 			keys = []
+		#If the user presses the escape key
 		elif keys[pygame.K_ESCAPE]:
-			self.edit_mode = False
-			self.new_name = ""
+			#Exit out of name edit mode
+			cancel_edit_name()
+		#If the user presses the up key and they are placing a new planet
+		elif keys[pygame.K_UP] and self.place_mode:
+			#Increse the the size of the new planet
+			self.new_planet_size += 1
+		
+		#If the user presses the down arrow key and they are placing a new planet
+		elif keys[pygame.K_DOWN] and self.place_mode:
+			#Decrease the the size of the new planet
+			self.new_planet_size -= 1
 
-		elif keys[pygame.K_UP]:
-			if self.place_mode:
-				self.new_planet_size += 1
-
-		elif keys[pygame.K_DOWN]:
-			if self.place_mode:
-				self.new_planet_size -= 1
-
+		#If the user is placing a new planet and they press the enter/return key
 		elif self.place_mode and keys[pygame.K_RETURN]:
+			#Get the position of the mouse
 			mouse_x, mouse_y = pygame.mouse.get_pos()
-
+			
+			#Get the position of the central planet
 			center_planet_x = self.planets[0].x
 			center_planet_y = self.planets[0].y
-
+			
+			#Get the difference between the mouse position and the central planet
 			x_diff = (mouse_x-center_planet_x)
 			y_diff = (mouse_y-center_planet_y)
-
+			
+			#Calulate the angle between the mouse position and the central planet
 			angle = math.degrees(math.atan(y_diff/x_diff))
+			
+			#If the mouse is on the left hand side of the screen
 			if mouse_x < center_planet_x:
+				#Add 180 degrees to the angle
 				angle += 180
-
+			
+			#Create a new planet
 			new_p = Planet(x=mouse_x,y=mouse_y,radius=self.new_planet_size/self.zoom_level,angle=angle,orbital_dis=(math.sqrt(((abs(mouse_x-self.planets[0].x)**2)+(abs(mouse_y-self.planets[0].y)**2))))/self.zoom_level,colour=(0,0,255),center=self.planets[0],system=self)
+			#Exit out of placing an new planet mode
 			self.place_mode = False
 
 		#Clears the screen so its blank before being drawn on
 		self.screen.fill((0,0,0))
 
-		#draws the stars
+		#Itterates through all of the stars
 		for star in self.star_coords:
+			#Draw a rectangle the size of the star at the location of that star
 			pygame.draw.rect(self.screen, (255,255,255), (star[0], star[1], self.stars[0], self.stars[1]))
 
-		#if the user is in place mode it draws the planet template
+		#Ff the user is in place mode
 		if self.place_mode:
+			#Get the mouse position
 			mouse_x, mouse_y = pygame.mouse.get_pos()
+			#Draw an empty circle at the location of the mouse with the size of the new planet
 			pygame.draw.circle(self.screen, (255,255,255), (mouse_x, mouse_y), self.new_planet_size, 2)
 
-		#enumerates through all the planets
-		#draws the planet and the relevant text
+		#Enumerates through all the planets
 		for n, p in enumerate(self.planets):
+			#If the simulation isn't paused and it isn't the the first planet as this is the central planet
 			if not self.paused and n != 0:
+				#Update the the position of the planet
 				p.update_pos()
-
+			
+			#If the planet is selected
 			if p == self.selected_planet:
+				#Make the text lable red
 				textsurface = font.render(p.name, True, (255, 0, 0))
 			else:
+				#If it isnt selected make the text white
 				textsurface = font.render(p.name, True, (255, 255, 255))
 
+			#Calculate the position of the planet after the zoom level has been taken in to account
 			adj_x, adj_y = self.zoom_shift(p.x, p.y, p.radius, p.radius)
-
-
+	
+			#Draw the planet label
 			screen.blit(textsurface,(int(adj_x),int(adj_y-(24+(p.radius*self.zoom_level)))))
-
+			#Draw the Planet
 			pygame.draw.circle(self.screen, p.colour, (round(adj_x), round(adj_y)), p.radius*self.zoom_level)
-
+		
+		#Create an empty list where the items will be stored, an item is a button or a label
 		self.items = []
 
-		#Choosing what elements should be drawn on the sidebar/menu
+		#If a planet is selected
 		if self.selected_planet:
+			#Add a button to cancel the planet celection
 			self.items.append(Button(self.screen, 1020,20,100,25,"Cancel",box_colour=(255,0,0),text_colour=(0,0,0),function=self.cancel_selected_planet))
+			#Add a button to delete the planet
 			self.items.append(Button(self.screen, 1020,50,100,25,"Remove",function=self.remove_planet))
+			
+			#If the user isnt in edit mode
 			if not self.edit_mode:
+				#Add a button to enter name edit mode
 				self.items.append(Button(self.screen, 1020,80,100,25,"Edit Name",function=self.set_to_edit_name))
 			else:
+				#Add a button to exit out of name edit mode
 				self.items.append(Button(self.screen, 1020,80,125,25,"Save (Esc)",function=self.cancel_edit_name))
 
 
-			#Add buttons to alter colour
+			#Add a label
 			self.items.append(Label(self.screen, 1020, 110, f"Control the RGB values", font_size=24))
-			#Red
+			
+			#Add a label along with a + and - button to alter the red RGB value
 			self.items.append(Button(self.screen, 1020,140,30,25,"-",box_colour=(255,0,0),text_colour=(0,0,0),function=self.rem_red))
 			self.items.append(Label(self.screen, 1055, 145, f"Red: {self.selected_planet.colour[0]}", font_size=24))
 			self.items.append(Button(self.screen, 1140,140,30,25,"+",box_colour=(255,0,0),text_colour=(0,0,0),function=self.add_red))
 
-			#Green
+			#Add a label along with a + and - button to alter the green RGB value
 			self.items.append(Button(self.screen, 1020,170,30,25,"-",box_colour=(0,255,0),text_colour=(0,0,0),function=self.rem_green))
 			self.items.append(Label(self.screen, 1055, 175, f"Green: {self.selected_planet.colour[1]}", font_size=24))
 			self.items.append(Button(self.screen, 1140,170,30,25,"+",box_colour=(0,255,0),text_colour=(0,0,0),function=self.add_green))
 
-			#Blue
+			#Add a label along with a + and - button to alter the blue RGB value
 			self.items.append(Button(self.screen, 1020,200,30,25,"-",box_colour=(0,0,255),text_colour=(0,0,0),function=self.rem_blue))
 			self.items.append(Label(self.screen, 1055, 205, f"Blue: {self.selected_planet.colour[2]}", font_size=24))
 			self.items.append(Button(self.screen, 1140,200,30,25,"+",box_colour=(0,0,255),text_colour=(0,0,0),function=self.add_blue))
 			
-
+			#Add a label to display the name of the planet and the distance from the planet it orbits around
 			self.items.append(Label(self.screen, 1020, 230, f"Planet Name: {self.selected_planet.name}", font_size=24))
 			self.items.append(Label(self.screen, 1020, 250, f"Orbital Distance: {self.selected_planet.orbital_dis}", font_size=24))
 
+			#If the user is in name edit mode
 			if self.edit_mode:
+				#Add labels to explain what to do
 				self.items.append(Label(self.screen, 1020, 270, f"Start typing or press backspace to", font_size=24))
 				self.items.append(Label(self.screen, 1020, 290, f"delete current text. Once you have", font_size=24))
 				self.items.append(Label(self.screen, 1020, 310, f"finished typing click 'Save (Esc)'.", font_size=24))
-
+				
+		#If they are in place mode
 		elif self.place_mode:
+			#Add a button to exit place mode
 			self.items.append(Button(self.screen, 1020,20,125,25,"Cancel",box_colour=(255,0,0),text_colour=(0,0,0),function=self.add_planet))
+			#Add labels to explain what to do
 			self.items.append(Label(self.screen, 1020, 60, f"Press ENTER to confirm planets location", font_size=20))
 			self.items.append(Label(self.screen, 1020, 80, f"Press UP to increase the planets size", font_size=20))
 			self.items.append(Label(self.screen, 1020, 100, f"Press DOWN to decrease the planets size", font_size=20))
+		
+		#If no planet is selcted and the user isnt in place mode
 		else:
+			#If the simulation isnt paused
 			if self.paused == False:
+				#Add a pause button
 				self.items.append(Button(self.screen, 1020,20,125,25,"Pause",box_colour=(255,0,0),text_colour=(0,0,0),function=self.toggle_pause))
+			#If the simulation is paused
 			else:
+				#Add a play button
 				self.items.append(Button(self.screen, 1020,20,125,25,"Play",box_colour=(0,255,0),text_colour=(0,0,0),function=self.toggle_pause))
-
+			
+			#Add a button to enter place mode
 			self.items.append(Button(self.screen, 1020,50,125,25,"Add Planet",box_colour=(0,255,0),text_colour=(0,0,0),function=self.add_planet))
 
+			#Add button to control the rate of time
 			self.items.append(Button(self.screen, 1020,100,125,25,"Speed Up Time",box_colour=(0,255,0),text_colour=(0,0,0),function=self.speed_up_time))
 			self.items.append(Button(self.screen, 1020,130,125,25,"Reset Time",box_colour=(255,191,0),text_colour=(0,0,0),function=self.reset_time))
 			self.items.append(Button(self.screen, 1020,160,125,25,"Slow Down Time",box_colour=(255,0,0),text_colour=(0,0,0),function=self.slow_down_time))
 
+			#Add a button to reset the zoom level
 			self.items.append(Button(self.screen, 1020,210,125,25,"Reset Zoom",box_colour=(255,191,0),text_colour=(0,0,0),function=self.reset_zoom))
 
+			#Add labels to explain what the user can do
 			self.items.append(Label(self.screen, 1020, 250, f"Press a planet to edit it or just", font_size=25))
 			self.items.append(Label(self.screen, 1020, 270, f"watch the world go by!", font_size=25))
 
+			#Add a quit button
 			self.items.append(Button(self.screen, 1020,SCREEN_HEIGHT-30,125,25,"Quit",box_colour=(255,0,0),text_colour=(0,0,0),function=sys.exit))
 
-		#Drawing the panel on the left
+		#Drawing the side bar on the right
 		pygame.draw.rect(self.screen, (0,0,0), (self.screen_width-self.divider, 0, self.divider, self.screen_height))
 		pygame.draw.rect(self.screen, (255,0,0), (self.screen_width-self.divider, 0, 2, self.screen_height))
 
-		#Displays all of the items for the menu
+		#Itterates through all of the items in the list
 		for item in self.items:
+			#Draws that item
 			item.render()
 
 		#Displays all the stats in the upper left
@@ -457,24 +526,30 @@ class System():
 		screen.blit(small_font.render(f"Running At: {round((self.clock.get_fps()/self.target_fps)*100,1)}%", True, (255, 255, 255)),(0,40))
 		screen.blit(small_font.render(f"Speed: {self.time_scale}x", True, (255, 255, 255)),(0,60))
 
-		#saves this cycles keys and updates the pygame window
+		#Saves this frames keys
 		self.prev_keys = keys
+		#Updates the pygame window
 		pygame.display.update()
 
 SCREEN_WIDTH = 1200
 SCREEN_HEIGHT = 750
 
+#Initializes the pygame module
 pygame.init()
+#Create the pygame window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-clock = pygame.time.Clock()
 
+#Initialize the pygame text engine
 pygame.font.init()
 
+#Create the default fonts and sizes
 font = pygame.font.SysFont('Ariel', 24)
 small_font = pygame.font.SysFont('Ariel', 26)
 
+#Create a system object
 system = System(target_fps=60,screen_width=1300,screen_height=750,divider=300,stars=[2,2,0.001])
 
+#Creat the different planets
 center_planet = Planet(x=SCREEN_WIDTH//2,y=SCREEN_HEIGHT//2,name="Sun",radius=30,colour=(255,255,255),mass=1*10^6,system=system)
 mercury = Planet(x=SCREEN_WIDTH//2,y=100,name="Mercury",radius=10,orbital_dis=100,colour=(255,0,0),center=center_planet,system=system)
 venus = Planet(x=SCREEN_WIDTH//2,y=150,name="Venus",radius=10,orbital_dis=150,colour=(0,255,0),center=center_planet,system=system)
@@ -482,12 +557,15 @@ earth = Planet(x=SCREEN_WIDTH//2,y=200,name="Earth",radius=10,orbital_dis=200,co
 moon = Planet(x=SCREEN_WIDTH//2,y=250,name="Moon",radius=5,orbital_dis=50,colour=(0,0,255),center=earth,system=system)
 mars = Planet(x=SCREEN_WIDTH//2,y=300,name="Mars",radius=10,orbital_dis=300,colour=(0,255,255),center=center_planet,system=system)
 
-accepted_chars = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"," "]
-
+#Main
 if __name__ == '__main__':
+	#Try to run the simulation
 	try:
 		while system.running:
 			system.run()
+	#If a exception occurs
 	except Exception as e:
+		#Print the exception traceback
 		print(traceback.format_exc())
+		#Wait for 10 seconds so the console doesnt immediatly close
 		sleep(10)
